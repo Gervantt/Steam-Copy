@@ -1,0 +1,14 @@
+{
+  "id": "session-1791015878019",
+  "startedAt": "2026-10-03T08:24:38.019Z",
+  "cwd": "/Users/dauletozhanov/Downloads/steam_copy",
+  "context": {},
+  "metrics": {
+    "edits": 0,
+    "commands": 0,
+    "tasks": 0,
+    "errors": 0
+  },
+  "endedAt": "2026-10-03T08:24:57.673Z",
+  "duration": 19655
+}
