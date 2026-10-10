@@ -10,4 +10,12 @@ class AppColors {
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0xFF8F98A0);
   static const Color star = Color(0xFFFFC83D);
+
+  // Forms & auth
+  static const Color inputFill = Color(0xFF233447);
+  static const Color headerGlow = Color(0xFF2A475E);
+  static const Color error = Color(0xFFFF7A7A);
+  static const Color errorFill = Color(0xFF2E2E3E);
+  static const Color success = discountText;
+  static const Color successBackground = discountBackground;
 }

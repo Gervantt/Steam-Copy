@@ -1,0 +1,96 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // A real account (email/password), not the anonymous web QR session.
+    function isAccount() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function isOwner(uid) {
+      return isAccount() && request.auth.uid == uid;
+    }
+
+    // Store catalog: written only by server/seed.js (Admin SDK).
+    match /games/{gameId} {
+      allow read: if request.auth != null;
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['name', 'email', 'role', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.role in ['Student', 'Developer', 'Gamer'];
+
+      match /wishlist/{gameId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && exists(/databases/$(database)/documents/games/$(gameId))
+          && request.resource.data.keys().hasOnly(['addedAt'])
+          && request.resource.data.addedAt == request.time;
+      }
+
+      match /cart/{gameId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && exists(/databases/$(database)/documents/games/$(gameId))
+          && request.resource.data.keys().hasOnly(['qty', 'addedAt'])
+          && request.resource.data.qty is int
+          && request.resource.data.qty >= 1 && request.resource.data.qty <= 10
+          && request.resource.data.addedAt == request.time;
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['qty'])
+          && request.resource.data.qty is int
+          && request.resource.data.qty >= 1 && request.resource.data.qty <= 10;
+      }
+
+      // Demo checkout: no payments, so the client records the purchase.
+      match /library/{gameId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && exists(/databases/$(database)/documents/games/$(gameId))
+          && request.resource.data.keys().hasOnly(['pricePaid', 'purchasedAt'])
+          && request.resource.data.pricePaid is number
+          && request.resource.data.purchasedAt == request.time;
+      }
+    }
+
+    // QR sign-in requests. The web page creates one, a signed-in phone
+    // approves or denies it, and the local QR server in server/ (Admin SDK,
+    // bypasses these rules) turns an approval into a login.
+    match /qr_sessions/{sessionId} {
+      allow create: if request.auth != null
+        && sessionId.matches('^[A-Za-z0-9_-]{16,128}$')
+        && request.resource.data.keys().hasOnly(['webUid', 'device', 'status', 'createdAt', 'expiresAt'])
+        && request.resource.data.webUid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.device is string
+        && request.resource.data.device.size() <= 64
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt <= request.time + duration.value(2, 'm');
+
+      // The browser watches its own request; a phone reads one by its id
+      // from the QR code. No listing, so ids can't be discovered.
+      allow get: if request.auth != null
+        && (resource.data.webUid == request.auth.uid || isAccount());
+
+      allow update: if isAccount()
+        && resource.data.status == 'pending'
+        && request.time < resource.data.expiresAt
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'approvedBy', 'approvedAt'])
+        && (
+          (request.resource.data.status == 'approved'
+            && request.resource.data.approvedBy == request.auth.uid
+            && request.resource.data.approvedAt == request.time)
+          || (request.resource.data.status == 'denied'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']))
+        );
+    }
+  }
+}
