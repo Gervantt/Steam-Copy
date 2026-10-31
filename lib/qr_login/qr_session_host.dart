@@ -11,13 +11,10 @@ import 'qr_login_service.dart';
 
 enum QrSessionStatus { pending, approved, denied, redeemed, missing }
 
-/// The web side of QR sign-in: creates a request in Firestore, shows it as a
-/// QR code, and once a signed-in phone approves it, exchanges it for a login
-/// via the local QR server (`server/index.js`).
+
 class QrSessionHost {
   static const Duration lifetime = Duration(seconds: 60);
 
-  /// Override with `--dart-define=QR_SERVER_URL=https://...`.
   static const String serverUrl = String.fromEnvironment(
     'QR_SERVER_URL',
     defaultValue: 'http://localhost:8787',

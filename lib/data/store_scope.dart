@@ -58,6 +58,12 @@ class StoreController extends ChangeNotifier {
     return null;
   }
 
+  /// Games on sale now; new releases stay hidden until a catalog refresh.
+  List<Game> get catalog => [
+        for (final Game g in games)
+          if (!g.newRelease) g,
+      ];
+
   List<Game> _byIds(Iterable<String> ids) =>
       [for (final id in ids) ?gameById(id)];
 
@@ -79,14 +85,16 @@ class StoreController extends ChangeNotifier {
 
   double get cartDiscount => cartSubtotal - cartTotal;
 
-  bool isWishlisted(Game g) => wishlist.contains(g.id);
-  bool inCart(Game g) => cart.containsKey(g.id);
-  bool owns(Game g) => library.contains(g.id);
+  bool isWishlisted(Game g) => wishlist.contains(g.catalogId);
+  bool inCart(Game g) => cart.containsKey(g.catalogId);
+  bool owns(Game g) => library.contains(g.catalogId);
+  int quantity(Game g) => cart[g.catalogId] ?? 0;
 
-  Future<void> toggleWishlist(Game g) => repository.toggleWishlist(g.id);
-  Future<void> addToCart(Game g) => repository.addToCart(g.id);
+  Future<void> toggleWishlist(Game g) =>
+      repository.toggleWishlist(g.catalogId);
+  Future<void> addToCart(Game g) => repository.addToCart(g.catalogId);
   Future<void> setQuantity(Game g, int qty) =>
-      repository.setQuantity(g.id, qty);
+      repository.setQuantity(g.catalogId, qty);
   Future<void> clearCart() => repository.clearCart();
   Future<void> checkout() => repository.checkout(cartGames, cart);
   Future<void> signOut() => repository.signOut();

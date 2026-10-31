@@ -254,7 +254,7 @@ class _BuyBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final StoreController store = StoreScope.of(context);
     final bool owned = store.owns(game);
-    final int inCart = store.cart[game.id] ?? 0;
+    final int inCart = store.quantity(game);
 
     return Container(
       color: AppColors.darkBackground,

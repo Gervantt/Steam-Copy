@@ -22,6 +22,9 @@ class Game {
   final bool featured;
   final bool topSeller;
 
+  /// Held back from the catalog until it "arrives" on pull-to-refresh.
+  final bool newRelease;
+
   /// Steam app id; the store art comes from Steam's CDN. Null means the
   /// cover is drawn from [palette] instead.
   final int? steamAppId;
@@ -47,9 +50,34 @@ class Game {
     this.steamAppId,
     this.featured = false,
     this.topSeller = false,
+    this.newRelease = false,
   });
 
   bool get onSale => discountPercent > 0;
+
+  /// The Firestore id. Re-released copies in the catalog feed get a
+  /// `#n` suffix so their list keys stay unique.
+  String get catalogId => id.split('#').first;
+
+  /// Copy with a new id, for showing the same game twice in a feed.
+  Game withId(String newId) => Game(
+        id: newId,
+        title: title,
+        studio: studio,
+        description: description,
+        genres: genres,
+        price: price,
+        oldPrice: oldPrice,
+        discountPercent: discountPercent,
+        rating: rating,
+        reviewCount: reviewCount,
+        palette: palette,
+        artStyle: artStyle,
+        steamAppId: steamAppId,
+        featured: featured,
+        topSeller: topSeller,
+        newRelease: newRelease,
+      );
 
   static const String _cdn =
       'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps';
@@ -86,6 +114,7 @@ class Game {
       steamAppId: (map['steamAppId'] as num?)?.toInt(),
       featured: map['featured'] as bool? ?? false,
       topSeller: map['topSeller'] as bool? ?? false,
+      newRelease: map['newRelease'] as bool? ?? false,
       palette: palette.length >= 3
           ? palette
           : const [Color(0xFF2A475E), Color(0xFF1B2838), Color(0xFF66C0F4)],

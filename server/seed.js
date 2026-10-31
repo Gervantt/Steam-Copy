@@ -27,6 +27,7 @@ const salePrice = (oldPrice, percent) =>
       price: salePrice(game.oldPrice, game.discountPercent),
       featured: game.featured === true,
       topSeller: game.topSeller === true,
+      newRelease: game.newRelease === true,
     });
   }
   await batch.commit();

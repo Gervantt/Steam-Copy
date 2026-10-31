@@ -116,11 +116,11 @@ class _StoreTabState extends State<StoreTab> {
       );
     }
 
-    final List<Game> featured = store.games.where((g) => g.featured).toList();
+    final List<Game> featured = store.catalog.where((g) => g.featured).toList();
     final List<Game> offers =
-        store.games.where((g) => g.onSale && matches(g)).toList();
+        store.catalog.where((g) => g.onSale && matches(g)).toList();
     final List<Game> top =
-        store.games.where((g) => g.topSeller && matches(g)).toList();
+        store.catalog.where((g) => g.topSeller && matches(g)).toList();
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
